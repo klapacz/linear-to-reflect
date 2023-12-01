@@ -1,5 +1,5 @@
 import { Context, Hono } from "https://deno.land/x/hono@v3.10.2/mod.ts";
-import { hmac } from "https://deno.land/x/hmac/mod.ts";
+import { hmac } from "https://deno.land/x/hmac@v2.0.1/mod.ts";
 
 const app = new Hono();
 
@@ -9,7 +9,6 @@ if (!WEBHOOK_SECRET) {
 }
 
 app.post("/", async (c: Context) => {
-  console.log(c.body);
   const rawBody = await c.req.arrayBuffer();
   const linearSignature = c.req.header("linear-signature");
 
@@ -22,17 +21,17 @@ app.post("/", async (c: Context) => {
     "hex"
   );
   if (calculatedHmac !== linearSignature) {
-    c.text("Wrong request.", 400);
+    c.json({ message: "Bad request." }, 400);
     return;
   }
 
-  const payload = await c.req.json();
+  const payload = JSON.parse(new TextDecoder().decode(rawBody));
   console.log(payload);
 
   // Do something neat with the data received!
 
   // Finally, respond with a HTTP 200 to signal all good
-  return c.text("Done.", 200);
+  return c.json({ status: "Ok." }, 200);
 });
 
 Deno.serve(app.fetch);
