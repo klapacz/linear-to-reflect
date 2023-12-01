@@ -1,6 +1,7 @@
 import { Context, Hono } from "https://deno.land/x/hono@v3.10.2/mod.ts";
 import { hmac } from "https://deno.land/x/hmac@v2.0.1/mod.ts";
 import { z } from "https://deno.land/x/zod@v3.21.4/mod.ts";
+import { datetime } from "https://deno.land/x/ptera@v1.0.2/mod.ts";
 
 const app = new Hono();
 
@@ -93,11 +94,29 @@ app.post("/", async (c: Context) => {
       content_markdown: noteContent,
       pinned: false,
     }),
-  }).catch((error) => console.error("Error:", error));
+  }).catch((error) => console.error("Creating reflect note error:", error));
 
-  // Do something neat with the data received!
+  const dt = datetime();
 
-  // Finally, respond with a HTTP 200 to signal all good
+  await fetch(
+    `https://reflect.app/api/graphs/${REFLECT_GRAPH_ID}/daily-notes`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${REFLECT_ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        date: dt.format("YYYY-MM-dd"),
+        text: `[[${noteSubject}]]`,
+        transform_type: "list-append",
+        list_name: "[[Links]]",
+      }),
+    }
+  ).catch((error) =>
+    console.error("Appending to daily note reflect error:", error)
+  );
+
   return okResponse;
 });
 
