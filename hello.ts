@@ -79,6 +79,7 @@ app.post("/", async (c: Context) => {
 
   const noteContent = `
   - URL: ${url}
+  - Type: #linear-task 
   ${noteDescription}
   ${noteAssignee}
   `;
